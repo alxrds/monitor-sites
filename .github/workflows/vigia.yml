@@ -1,0 +1,40 @@
+name: Vigia dos sites
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  checar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Testar cada site
+        run: |
+          fora=()
+          while read -r site; do
+            [ -z "$site" ] && continue
+            ok=0
+            for tentativa in 1 2 3; do
+              codigo=$(curl -s -o /dev/null -m 20 -w '%{http_code}' "https://$site/" || true)
+              if [ "$codigo" != "000" ] && [ "$codigo" -lt 500 ]; then ok=1; break; fi
+              sleep 10
+            done
+            if [ "$ok" = 1 ]; then
+              echo "ok   $codigo $site"
+            else
+              echo "FORA $codigo $site"
+              fora+=("$site ($codigo)")
+            fi
+          done < sites.txt
+          if [ ${#fora[@]} -gt 0 ]; then
+            {
+              echo "## Sites fora do ar"
+              for s in "${fora[@]}"; do echo "- $s"; done
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Fora do ar: ${fora[*]}"
+            exit 1
+          fi
