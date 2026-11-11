@@ -6,7 +6,6 @@ segati.adv.br
 goncalvesmota.adv.br
 cfreitas.ejur.app
 dcaetano.ejur.app
-goncalvespadua.ejur.app
 demo.ejur.app
 ecossistemajuridico.com
 sent.app.br
